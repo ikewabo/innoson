@@ -609,16 +609,56 @@
 
   /* ----------------------------------------------------
      ACT 4: SOVEREIGN ACQUISITION / SHOWROOM CLOSE
+     With dynamic responsive animated GIF / video background
      ---------------------------------------------------- */
   .close-section {
+    position: relative;
     padding: 10rem 3.8rem 5rem 3.8rem;
     background: #040507;
-    position: relative;
     text-align: center;
+    overflow: hidden;
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .close-bg-media {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    overflow: hidden;
+    pointer-events: none;
+  }
+  .close-gif-landscape, .close-gif-portrait {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+  }
+  .close-gif-landscape {
+    display: block;
+  }
+  .close-gif-portrait {
+    display: none;
+  }
+  .close-scrim {
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(circle at 50% 50%, rgba(4,5,7,0.45) 0%, rgba(4,5,7,0.85) 75%, rgba(4,5,7,0.98) 100%),
+                linear-gradient(to top, rgba(4,5,7,0.95) 0%, rgba(4,5,7,0.3) 50%, rgba(4,5,7,0.95) 100%);
+    z-index: 2;
+    pointer-events: none;
   }
   .close-box {
+    position: relative;
+    z-index: 5;
     max-width: 820px;
     margin: 0 auto;
+    width: 100%;
   }
   .close-title {
     font-size: clamp(2.4rem, 4.8vw, 4.4rem);
@@ -955,6 +995,13 @@
 
     .close-section {
       padding: 6rem 1.4rem 3rem 1.4rem;
+      min-height: 100svh;
+    }
+    .close-gif-landscape {
+      display: none !important;
+    }
+    .close-gif-portrait {
+      display: block !important;
     }
     .close-title {
       font-size: 2.1rem;
@@ -1192,8 +1239,14 @@
 
   <!-- ============================================================
        ACT 4: SOVEREIGN ACQUISITION / CLOSE
+       With animated GIF background (hero-vid-3a.gif landscape / hero-vid-916-3a.gif portrait)
        ============================================================ -->
   <section class="close-section" id="inquire" data-sc-act="pin" data-sc-span="1.15" data-sc-drift="#040507">
+    <div class="close-bg-media">
+      <img class="close-gif-landscape" src="assets/hero-vid-3a.gif" alt="Innoson Authority Landscape">
+      <img class="close-gif-portrait" src="assets/hero-vid-916-3a.gif" alt="Innoson Authority Portrait">
+      <div class="close-scrim"></div>
+    </div>
     <div class="close-box" data-sc-stage>
       <h2 class="close-title">The Road Does Not Negotiate.<br>Neither Does Innoson.</h2>
       <p class="close-desc">
