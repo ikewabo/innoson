@@ -174,7 +174,7 @@
     justify-content: space-between;
     padding: 7.5rem 3.8rem 2.8rem 3.8rem;
     pointer-events: auto;
-    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    transition: opacity 0.3s ease-out, transform 0.3s ease-out;
   }
   .hero-overlay-layer.fade-out {
     opacity: 0;
@@ -469,7 +469,14 @@
     transform: translateY(-50%) translateY(20px);
     max-width: 760px;
     opacity: 0;
-    transition: opacity 0.4s ease-out, transform 0.4s ease-out;
+    transition: opacity 0.35s ease-out, transform 0.35s ease-out;
+    pointer-events: none;
+    visibility: hidden;
+  }
+  .editorial-block.active {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(-50%) translateY(0);
     pointer-events: auto;
   }
   .editorial-block.active {
@@ -771,24 +778,48 @@
     .innoson-footer { flex-direction: column; gap: 1.2rem; text-align: center; }
   }
 
-  /* 9:16 Mobile specific backgrounds and layout */
-  .master-scrub-video-desktop { display: block; }
-  .master-scrub-video-mobile { display: none; }
-  .master-gif-mobile { display: none; }
+  /* Responsive Video Backgrounds: 16:9 for Desktop/Landscape, 9:16 for Mobile/Portrait */
+  .master-video-169 {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 1;
+    filter: contrast(1.05) brightness(1.0);
+    display: block;
+  }
+  .master-video-916 {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 1;
+    filter: contrast(1.05) brightness(1.0);
+    display: none;
+  }
+  .master-gif-landscape, .master-gif-portrait {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    z-index: 1;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .master-gif-landscape.active, .master-gif-portrait.active {
+    opacity: 1;
+  }
 
   @media (max-width: 768px), (max-aspect-ratio: 13/16) {
-    .master-scrub-video-desktop { display: none !important; }
-    .master-scrub-video-mobile {
-      display: block !important;
-      position: absolute;
-      inset: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      object-position: center;
-      z-index: 1;
-      filter: contrast(1.05) brightness(1.0);
-    }
+    .master-video-169 { display: none !important; }
+    .master-video-916 { display: block !important; }
     .master-gif-mobile {
       display: block !important;
       position: absolute;
@@ -979,16 +1010,21 @@
     <div class="sc-master-stage" data-sc-stage id="masterStage">
       
       <!-- Responsive Poster & Seamless Master Continuous Video -->
+      <!-- Poster Backdrop -->
       <picture class="sc-stage__poster">
         <source media="(max-width: 768px), (max-aspect-ratio: 13/16)" srcset="assets/innoson-master-poster-916.webp">
         <img src="assets/innoson-master-poster.webp" alt="Innoson Portal Gateway">
       </picture>
-      <!-- Desktop 16:9 Continuous Scrub Video -->
-      <video class="master-scrub-video master-scrub-video-desktop" id="masterVideo" data-sc-scrub data-sc-src="assets/innoson-master-scrub.mp4" data-sc-src-mobile="assets/innoson-master-scrub-916.mp4" muted playsinline></video>
-      <!-- Mobile 9:16 Continuous Scrub Video & Dynamic 9:16 Animated GIFs -->
-      <video class="master-scrub-video master-scrub-video-mobile" id="masterVideoMobile" data-sc-scrub data-sc-src="assets/innoson-master-scrub-916.mp4" muted playsinline></video>
-      <img class="master-gif-mobile" id="mobileGif1" src="assets/hero-vid-916-1a.gif" alt="Innoson Mobile Hero Animation">
-      <img class="master-gif-mobile" id="mobileGif2" src="assets/hero-vid-916-2a.gif" alt="Innoson Mobile SUV Motion">
+
+      <!-- Landscape / Desktop 16:9 Video (Plays once on load, then syncs with scroll) -->
+      <video class="master-video-169" id="video169" src="assets/innoson-master-scrub.mp4" poster="assets/innoson-master-poster.webp" muted playsinline preload="auto"></video>
+      <img class="master-gif-landscape" id="gif169_1" src="assets/hero-vid-1a.gif" alt="Innoson Landscape Genesis">
+      <img class="master-gif-landscape" id="gif169_2" src="assets/hero-vid-2a.gif" alt="Innoson Landscape SUV Motion">
+
+      <!-- Portrait / Mobile 9:16 Video (Plays once on load, then syncs with scroll) -->
+      <video class="master-video-916" id="video916" src="assets/innoson-master-scrub-916.mp4" poster="assets/innoson-master-poster-916.webp" muted playsinline preload="auto"></video>
+      <img class="master-gif-portrait" id="gif916_1" src="assets/hero-vid-916-1a.gif" alt="Innoson Portrait Genesis">
+      <img class="master-gif-portrait" id="gif916_2" src="assets/hero-vid-916-2a.gif" alt="Innoson Portrait SUV Motion">
       <div class="master-scrim"></div>
 
       <!-- LAYER 1: HERO OVERLAY (Image 1 Style: Japan Reference) -->
@@ -1233,7 +1269,7 @@
       });
     }
 
-    // 3. Continuous Master Stage Scroll Integration
+    // 3. Unified Video Engine: One-Time Autoplay Onload + Scroll Scrubbing
     const expSection = document.getElementById('experience');
     const heroLayer = document.getElementById('heroLayer');
     const telemetryHud = document.getElementById('telemetryHud');
@@ -1243,6 +1279,13 @@
     const telemetrySpeed = document.getElementById('telemetrySpeed');
     const heroThumb = document.getElementById('heroRailThumb');
 
+    const video169 = document.getElementById('video169');
+    const video916 = document.getElementById('video916');
+    const gif169_1 = document.getElementById('gif169_1');
+    const gif169_2 = document.getElementById('gif169_2');
+    const gif916_1 = document.getElementById('gif916_1');
+    const gif916_2 = document.getElementById('gif916_2');
+
     const cues = [
       document.getElementById('cue1'),
       document.getElementById('cue2'),
@@ -1250,6 +1293,43 @@
       document.getElementById('cue4')
     ];
 
+    function isPortrait() {
+      return window.innerWidth <= 768 || (window.innerWidth / window.innerHeight) <= 0.85;
+    }
+
+    function getActiveVideo() {
+      return isPortrait() ? video916 : video169;
+    }
+
+    let hasAutoplayFinished = false;
+    let isUserScrolled = false;
+
+    // One-time Play Onload for Both Portrait and Landscape
+    function playOnload() {
+      const vid = getActiveVideo();
+      if (!vid) return;
+
+      vid.muted = true;
+      vid.playsInline = true;
+      vid.currentTime = 0;
+
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise.then(function() {
+          console.log('Autoplay started successfully');
+        }).catch(function(err) {
+          console.log('Autoplay deferred, will play on user scroll or touch', err);
+        });
+      }
+
+      // Once it plays through once, mark complete and pause so scroll takes over
+      vid.addEventListener('ended', function() {
+        hasAutoplayFinished = true;
+        vid.pause();
+      }, { once: true });
+    }
+
+    // Scroll sync
     window.scrollToJourney = function() {
       const rect = expSection.getBoundingClientRect();
       const top = window.scrollY + rect.top;
@@ -1278,17 +1358,36 @@
         p = Math.min(Math.max(-rect.top / h, 0), 1);
       }
 
-      // 1. HERO LAYER FADE (0.00 -> 0.10)
-      if (p <= 0.09) {
-        const heroAlpha = Math.max(0, 1 - (p / 0.08));
+      if (window.scrollY > 15) {
+        isUserScrolled = true;
+      }
+
+      const activeVid = getActiveVideo();
+
+      // If user has scrolled or autoplay finished, scrub the video currentTime to match scroll progress
+      if (isUserScrolled && activeVid && activeVid.duration) {
+        if (!activeVid.paused) {
+          activeVid.pause();
+        }
+        const targetTime = p * activeVid.duration;
+        if (Math.abs(activeVid.currentTime - targetTime) > 0.04) {
+          try { activeVid.currentTime = targetTime; } catch(e){}
+        }
+      }
+
+      // 1. HERO LAYER FADE (0.00 -> 0.08)
+      if (p <= 0.07) {
+        const heroAlpha = Math.max(0, 1 - (p / 0.06));
         heroLayer.style.opacity = heroAlpha;
-        heroLayer.style.transform = 'translateY(' + (-p * 150) + 'px)';
+        heroLayer.style.visibility = heroAlpha > 0 ? 'visible' : 'hidden';
+        heroLayer.style.transform = 'translateY(' + (-p * 120) + 'px)';
         heroLayer.style.pointerEvents = heroAlpha > 0.3 ? 'auto' : 'none';
         if (heroThumb) {
-          heroThumb.style.transform = 'translateY(' + ((p / 0.08) * (120 - 38)) + 'px)';
+          heroThumb.style.transform = 'translateY(' + ((p / 0.06) * (120 - 38)) + 'px)';
         }
       } else {
         heroLayer.style.opacity = '0';
+        heroLayer.style.visibility = 'hidden';
         heroLayer.style.pointerEvents = 'none';
       }
 
@@ -1301,15 +1400,13 @@
 
       // 3. NARRATIVE CUES vs SPECS OVERLAY
       if (p > 0.06 && p <= 0.52) {
-        // Phase: Editorial narrative reveals as vehicle surges through stone gate
         narrativeContainer.classList.add('active');
         specsContainer.classList.remove('active');
 
-        // Sub-progress 0..1 across 0.08 to 0.50
-        const subP = Math.min(Math.max((p - 0.08) / 0.42, 0), 1);
-        updateCueState(0, subP >= 0 && subP < 0.26);
-        updateCueState(1, subP >= 0.24 && subP < 0.52);
-        updateCueState(2, subP >= 0.50 && subP < 0.78);
+        const subP = Math.min(Math.max((p - 0.08) / 0.44, 0), 1);
+        updateCueState(0, subP >= 0.02 && subP < 0.26);
+        updateCueState(1, subP >= 0.26 && subP < 0.51);
+        updateCueState(2, subP >= 0.51 && subP < 0.76);
         updateCueState(3, subP >= 0.76 && subP <= 1.0);
 
         if (subP < 0.33) {
@@ -1323,14 +1420,19 @@
           telemetrySpeed.textContent = 'CRUISE: ALL-WHEEL DRIVE';
         }
       } else if (p > 0.52 && p < 0.92) {
-        // Phase: Engineering Specifications over continuous vehicle in city
         narrativeContainer.classList.remove('active');
+        for (let i = 0; i < cues.length; i++) {
+          updateCueState(i, false);
+        }
         specsContainer.classList.add('active');
 
         telemetryLoc.textContent = 'SYSTEMS: ARCHITECTURE ACTIVE';
         telemetrySpeed.textContent = 'CHASSIS TELEMETRY: VERIFIED';
       } else {
         narrativeContainer.classList.remove('active');
+        for (let i = 0; i < cues.length; i++) {
+          updateCueState(i, false);
+        }
         specsContainer.classList.remove('active');
       }
     }
@@ -1345,57 +1447,19 @@
       }
     }
 
-    
-    // Mobile 9:16 GIF and Video playhead controller
-    const mobileVideo = document.getElementById('masterVideoMobile');
-    const mobileGif1 = document.getElementById('mobileGif1');
-    const mobileGif2 = document.getElementById('mobileGif2');
-    const isMobileViewport = function() {
-      return window.innerWidth <= 768 || (window.innerWidth / window.innerHeight) <= 0.85;
-    };
-
-    function updateMobileMedia(p) {
-      if (!isMobileViewport()) {
-        if (mobileGif1) mobileGif1.classList.remove('active');
-        if (mobileGif2) mobileGif2.classList.remove('active');
-        return;
-      }
-      // Scrub mobile 9:16 video
-      if (mobileVideo && mobileVideo.duration) {
-        const targetTime = p * mobileVideo.duration;
-        if (Math.abs(mobileVideo.currentTime - targetTime) > 0.05) {
-          try { mobileVideo.currentTime = targetTime; } catch(e){}
-        }
-      }
-      // Dynamic GIF state for mobile: Hero GIF (0..0.12), SUV Motion GIF (0.12..0.55)
-      if (p <= 0.12) {
-        if (mobileGif1) mobileGif1.classList.add('active');
-        if (mobileGif2) mobileGif2.classList.remove('active');
-      } else if (p > 0.12 && p <= 0.55) {
-        if (mobileGif1) mobileGif1.classList.remove('active');
-        if (mobileGif2) mobileGif2.classList.add('active');
-      } else {
-        if (mobileGif1) mobileGif1.classList.remove('active');
-        if (mobileGif2) mobileGif2.classList.remove('active');
-      }
-    }
-
-    const prevUpdate = updateMasterExperience;
-    updateMasterExperience = function() {
-      prevUpdate();
-      const rect = expSection.getBoundingClientRect();
-      const h = expSection.offsetHeight - window.innerHeight;
-      let p = 0;
-      if (h > 0) p = Math.min(Math.max(-rect.top / h, 0), 1);
-      updateMobileMedia(p);
-    };
-
     window.addEventListener('resize', function() {
       updateMasterExperience();
     }, { passive: true });
 
     window.addEventListener('scroll', updateMasterExperience, { passive: true });
+
+    // Initialize
     updateMasterExperience();
+    window.addEventListener('load', playOnload);
+    // Also trigger if already loaded
+    if (document.readyState === 'complete' || document.readyState === 'interactive') {
+      setTimeout(playOnload, 150);
+    }
   })();
 </script>
 </body>
