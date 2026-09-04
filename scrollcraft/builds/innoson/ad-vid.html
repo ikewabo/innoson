@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>INNOSON · Cinematic Commercial · IVM G680</title>
+<meta name="description" content="Watch the cinematic showcase of the New Innoson G-Wagon IVM G680. Drive the Future. Made in Nigeria.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%23080a0d'/><text x='50%' y='68%' font-size='18' font-weight='900' fill='%2300D2FF' text-anchor='middle' font-family='sans-serif'>I</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800;900&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --sc-canvas:       #06080a;
+    --sc-surface:      #0e1217;
+    --sc-surface-glass: rgba(14, 18, 23, 0.65);
+    --sc-ink:          #f3f6f9;
+    --sc-ink-soft:     #9aa4b2;
+    --sc-accent:       #00D2FF;
+    --sc-accent-glow:  rgba(0, 210, 255, 0.4);
+    --sc-accent-ink:   #040d14;
+    --sc-border-glass: rgba(255, 255, 255, 0.14);
+    --sc-font-display: 'Plus Jakarta Sans', system-ui, -apple-system, sans-serif;
+    --sc-font-mono:    'Space Grotesk', monospace, sans-serif;
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0;
+    padding: 0;
+    width: 100%;
+    height: 100%;
+    background: #000000;
+    color: var(--sc-ink);
+    font-family: var(--sc-font-display);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* Cinematic Stage Wrapper */
+  .theater-container {
+    position: relative;
+    width: 100vw;
+    min-height: 100vh;
+    min-height: 100svh;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    background: radial-gradient(ellipse at center, #0c1219 0%, #030406 80%, #000000 100%);
+    overflow: hidden;
+  }
+
+  /* Top Navigation Bar */
+  .theater-header {
+    position: relative;
+    z-index: 20;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 2.2rem 3.8rem;
+    pointer-events: auto;
+  }
+  .brand-back {
+    display: inline-flex;
+    align-items: center;
+    gap: 1rem;
+    color: #ffffff;
+    text-decoration: none;
+    font-size: 0.85rem;
+    font-weight: 700;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    transition: color 0.25s ease, transform 0.25s ease;
+  }
+  .brand-back:hover {
+    color: var(--sc-accent);
+    transform: translateX(-4px);
+  }
+  .back-icon-circle {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    border: 1px solid var(--sc-border-glass);
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: border-color 0.25s ease, background 0.25s ease;
+  }
+  .brand-back:hover .back-icon-circle {
+    border-color: var(--sc-accent);
+    background: rgba(0, 210, 255, 0.15);
+  }
+
+  .header-badge {
+    font-family: var(--sc-font-mono);
+    font-size: 0.75rem;
+    letter-spacing: 0.24em;
+    color: var(--sc-accent);
+    background: rgba(0, 210, 255, 0.08);
+    border: 1px solid rgba(0, 210, 255, 0.25);
+    padding: 0.4rem 1rem;
+    border-radius: 20px;
+    text-transform: uppercase;
+  }
+
+  /* Video Stage Canvas */
+  .theater-stage {
+    position: relative;
+    z-index: 10;
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 1rem 3.8rem;
+  }
+
+  /* Responsive Video Wrapper */
+  .video-frame {
+    position: relative;
+    max-width: 1200px;
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.9), 0 0 40px rgba(0, 210, 255, 0.15);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    background: #030406;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .ad-video-player {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    outline: none;
+  }
+
+  /* Video Elements Switcher */
+  .ad-video-169 {
+    display: block;
+  }
+  .ad-video-916 {
+    display: none;
+  }
+
+  /* Bottom Details & Controls */
+  .theater-footer {
+    position: relative;
+    z-index: 20;
+    padding: 2rem 3.8rem 2.6rem 3.8rem;
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    gap: 2rem;
+  }
+  .ad-title-group {
+    max-width: 650px;
+  }
+  .ad-eyebrow {
+    font-family: var(--sc-font-mono);
+    font-size: 0.78rem;
+    letter-spacing: 0.22em;
+    color: var(--sc-accent);
+    text-transform: uppercase;
+    margin-bottom: 0.5rem;
+  }
+  .ad-title {
+    font-size: clamp(1.4rem, 2.8vw, 2.2rem);
+    font-weight: 800;
+    letter-spacing: -0.01em;
+    margin: 0 0 0.5rem 0;
+    color: #ffffff;
+  }
+  .ad-tagline {
+    font-size: 0.95rem;
+    color: var(--sc-ink-soft);
+    line-height: 1.6;
+    margin: 0;
+  }
+
+  .action-controls {
+    display: flex;
+    align-items: center;
+    gap: 1.2rem;
+  }
+  .btn-explore {
+    background: var(--sc-accent);
+    color: var(--sc-accent-ink);
+    padding: 0.95rem 2.2rem;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    text-decoration: none;
+    border-radius: 4px;
+    box-shadow: 0 4px 18px var(--sc-accent-glow);
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+    white-space: nowrap;
+  }
+  .btn-explore:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 24px rgba(0, 210, 255, 0.65);
+  }
+
+  /* Mobile & Portrait Adaptation (9:16) */
+  @media (max-width: 768px), (max-aspect-ratio: 13/16) {
+    .theater-header {
+      padding: 1.5rem 1.4rem 0.5rem 1.4rem;
+    }
+    .theater-stage {
+      padding: 0.8rem 1.4rem;
+      align-items: center;
+    }
+    .video-frame {
+      max-width: 420px;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      max-height: 68vh;
+      box-shadow: 0 16px 48px rgba(0, 0, 0, 0.95), 0 0 30px rgba(0, 210, 255, 0.2);
+    }
+    .ad-video-169 {
+      display: none !important;
+    }
+    .ad-video-916 {
+      display: block !important;
+    }
+    .theater-footer {
+      padding: 1.2rem 1.4rem 2rem 1.4rem;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 1.2rem;
+    }
+    .action-controls {
+      width: 100%;
+    }
+    .btn-explore {
+      width: 100%;
+      text-align: center;
+    }
+  }
+</style>
+</head>
+<body>
+
+<div class="theater-container">
+  
+  <!-- Header: Back to Experience -->
+  <header class="theater-header">
+    <a href="index.html" class="brand-back" id="backToHomeLink">
+      <span class="back-icon-circle">
+        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M7.5 1.5L3 6L7.5 10.5"/>
+        </svg>
+      </span>
+      <span>Return to Experience</span>
+    </a>
+    <span class="header-badge">IVM G680 COMMERCIAL</span>
+  </header>
+
+  <!-- Stage: Aspect-Ratio Responsive Video -->
+  <main class="theater-stage">
+    <div class="video-frame">
+      <!-- 16:9 Landscape Video for Desktop -->
+      <video class="ad-video-player ad-video-169" id="video169" controls autoplay playsinline preload="auto">
+        <source src="assets/ad-vid-1.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+
+      <!-- 9:16 Vertical Video for Mobile Devices -->
+      <video class="ad-video-player ad-video-916" id="video916" controls autoplay playsinline preload="auto">
+        <source src="assets/ad-vid-916-1.mp4" type="video/mp4">
+        Your browser does not support HTML5 video.
+      </video>
+    </div>
+  </main>
+
+  <!-- Footer: Commercial Details & CTA -->
+  <footer class="theater-footer">
+    <div class="ad-title-group">
+      <div class="ad-eyebrow">Times Square Billboard Showcase // Commercial 01</div>
+      <h1 class="ad-title">Drive the Future. Made in Nigeria.</h1>
+      <p class="ad-tagline">
+        The New Innoson G-Wagon Unleashed. Africa's premier automotive pioneer commanding the world stage with unyielding strength, luxury, and all-terrain authority.
+      </p>
+    </div>
+    <div class="action-controls">
+      <a href="index.html#inquire" class="btn-explore">Request Fleet Dossier</a>
+    </div>
+  </footer>
+
+</div>
+
+<script>
+  (function() {
+    const v169 = document.getElementById('video169');
+    const v916 = document.getElementById('video916');
+
+    function isPortraitMode() {
+      return window.innerWidth <= 768 || (window.innerWidth / window.innerHeight) <= 0.85;
+    }
+
+    function initPlayback() {
+      if (isPortraitMode()) {
+        if (v169) v169.pause();
+        if (v916) {
+          v916.play().catch(function() {
+            // If autoplay with sound is blocked, mute and retry or allow user to click play
+            v916.muted = true;
+            v916.play().catch(function() {});
+          });
+        }
+      } else {
+        if (v916) v916.pause();
+        if (v169) {
+          v169.play().catch(function() {
+            v169.muted = true;
+            v169.play().catch(function() {});
+          });
+        }
+      }
+    }
+
+    window.addEventListener('DOMContentLoaded', initPlayback);
+    window.addEventListener('resize', function() {
+      if (isPortraitMode()) {
+        if (v169 && !v169.paused) {
+          const t = v169.currentTime;
+          v169.pause();
+          if (v916) {
+            v916.currentTime = t;
+            v916.play().catch(function(){});
+          }
+        }
+      } else {
+        if (v916 && !v916.paused) {
+          const t = v916.currentTime;
+          v916.pause();
+          if (v169) {
+            v169.currentTime = t;
+            v169.play().catch(function(){});
+          }
+        }
+      }
+    });
+  })();
+</script>
+
+</body>
+</html>

@@ -222,6 +222,7 @@
     font-weight: 700;
     letter-spacing: 0.16em;
     text-transform: uppercase;
+    text-decoration: none;
     cursor: pointer;
     transition: transform 0.2s ease, opacity 0.2s ease;
     padding: 0;
@@ -1084,14 +1085,14 @@
               Endless<br>Discovery
             </h1>
             <div class="hero-controls">
-              <button class="btn-watch-movie" id="openVideoBtn" aria-label="Watch Cinematic Movie">
+              <a href="ad-vid.html" class="btn-watch-movie" id="openVideoBtn" aria-label="Watch Cinematic Commercial">
                 <span class="play-circle">
                   <svg width="14" height="16" viewBox="0 0 14 16" fill="currentColor">
                     <path d="M13.2 7.15L2.1 0.35C1.4 -0.08 0.5 0.42 0.5 1.2V14.8C0.5 15.58 1.4 16.08 2.1 15.65L13.2 8.85C13.88 8.43 13.88 7.57 13.2 7.15Z"/>
                   </svg>
                 </span>
                 Watch Movie
-              </button>
+              </a>
               <a href="javascript:scrollToJourney()" class="btn-know-more">Know More</a>
             </div>
           </div>
@@ -1298,29 +1299,8 @@
       }
     }, { passive: true });
 
-    // 2. Video Modal Controls
-    const openBtn = document.getElementById('openVideoBtn');
-    const closeBtn = document.getElementById('closeVideoBtn');
-    const modal = document.getElementById('videoModal');
-    const player = document.getElementById('modalVideoPlayer');
-
-    if (openBtn && modal && closeBtn) {
-      openBtn.addEventListener('click', function() {
-        modal.classList.add('open');
-        player.currentTime = 0;
-        player.play().catch(function() {});
-      });
-      closeBtn.addEventListener('click', function() {
-        modal.classList.remove('open');
-        player.pause();
-      });
-      modal.addEventListener('click', function(e) {
-        if (e.target === modal) {
-          modal.classList.remove('open');
-          player.pause();
-        }
-      });
-    }
+    // 2. Video Commercial Link
+    // openVideoBtn navigates to ad-vid.html presenting the commercial in responsive aspect ratios.
 
     // 3. Unified Video Engine: One-Time Autoplay Onload + Scroll Scrubbing
     const expSection = document.getElementById('experience');
