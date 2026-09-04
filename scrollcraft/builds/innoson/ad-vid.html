@@ -141,6 +141,43 @@
     outline: none;
   }
 
+  /* Unmute Floating Banner / Button */
+  .unmute-banner {
+    position: absolute;
+    bottom: 24px;
+    right: 24px;
+    z-index: 30;
+    background: rgba(10, 14, 20, 0.85);
+    border: 1px solid var(--sc-accent);
+    box-shadow: 0 4px 20px rgba(0, 210, 255, 0.4);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    color: #ffffff;
+    padding: 0.75rem 1.4rem;
+    border-radius: 30px;
+    display: inline-flex;
+    align-items: center;
+    gap: 0.7rem;
+    font-size: 0.8rem;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    cursor: pointer;
+    transition: transform 0.2s ease, background 0.2s ease;
+    animation: bounceIn 0.5s ease-out;
+  }
+  .unmute-banner:hover {
+    transform: scale(1.05);
+    background: rgba(0, 210, 255, 0.25);
+  }
+  .unmute-banner.hidden {
+    display: none !important;
+  }
+  @keyframes bounceIn {
+    0% { opacity: 0; transform: translateY(15px); }
+    100% { opacity: 1; transform: translateY(0); }
+  }
+
   /* Video Elements Switcher */
   .ad-video-169 {
     display: block;
@@ -230,6 +267,12 @@
     .ad-video-916 {
       display: block !important;
     }
+    .unmute-banner {
+      bottom: 16px;
+      right: 16px;
+      padding: 0.6rem 1rem;
+      font-size: 0.72rem;
+    }
     .theater-footer {
       padding: 1.2rem 1.4rem 2rem 1.4rem;
       flex-direction: column;
@@ -267,16 +310,24 @@
   <main class="theater-stage">
     <div class="video-frame">
       <!-- 16:9 Landscape Video for Desktop -->
-      <video class="ad-video-player ad-video-169" id="video169" controls autoplay playsinline preload="auto">
+      <video class="ad-video-player ad-video-169" id="video169" controls autoplay muted playsinline preload="auto" loop>
         <source src="assets/ad-vid-1.mp4" type="video/mp4">
         Your browser does not support HTML5 video.
       </video>
 
       <!-- 9:16 Vertical Video for Mobile Devices -->
-      <video class="ad-video-player ad-video-916" id="video916" controls autoplay playsinline preload="auto">
+      <video class="ad-video-player ad-video-916" id="video916" controls autoplay muted playsinline preload="auto" loop>
         <source src="assets/ad-vid-916-1.mp4" type="video/mp4">
         Your browser does not support HTML5 video.
       </video>
+
+      <!-- Unmute Quick Action Pill -->
+      <button class="unmute-banner" id="unmuteBtn" aria-label="Unmute Video Audio">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+          <path d="M3 9v6h4l5 5V4L7 9H3zm13.5 3c0-1.77-1.02-3.29-2.5-4.03v8.05c1.48-.73 2.5-2.25 2.5-4.02zM14 3.23v2.06c2.89.86 5 3.54 5 6.71s-2.11 5.85-5 6.71v2.06c4.01-.91 7-4.49 7-8.77s-2.99-7.86-7-8.77z"/>
+        </svg>
+        <span>Tap for Sound</span>
+      </button>
     </div>
   </main>
 
@@ -300,51 +351,96 @@
   (function() {
     const v169 = document.getElementById('video169');
     const v916 = document.getElementById('video916');
+    const unmuteBtn = document.getElementById('unmuteBtn');
 
     function isPortraitMode() {
       return window.innerWidth <= 768 || (window.innerWidth / window.innerHeight) <= 0.85;
     }
 
-    function initPlayback() {
-      if (isPortraitMode()) {
-        if (v169) v169.pause();
-        if (v916) {
-          v916.play().catch(function() {
-            // If autoplay with sound is blocked, mute and retry or allow user to click play
-            v916.muted = true;
-            v916.play().catch(function() {});
-          });
-        }
-      } else {
-        if (v916) v916.pause();
-        if (v169) {
-          v169.play().catch(function() {
-            v169.muted = true;
-            v169.play().catch(function() {});
+    function getActiveVid() {
+      return isPortraitMode() ? v916 : v169;
+    }
+
+    function getInactiveVid() {
+      return isPortraitMode() ? v169 : v916;
+    }
+
+    function startActivePlayback() {
+      const active = getActiveVid();
+      const inactive = getInactiveVid();
+
+      if (inactive) {
+        inactive.pause();
+      }
+
+      if (active) {
+        // First try to play with current sound state
+        const promise = active.play();
+        if (promise !== undefined) {
+          promise.catch(function() {
+            // If browser autoplay policy blocks audio, mute and play immediately (100% reliable)
+            active.muted = true;
+            active.play().catch(function(e) {
+              console.log('Playback retry error:', e);
+            });
           });
         }
       }
     }
 
-    window.addEventListener('DOMContentLoaded', initPlayback);
-    window.addEventListener('resize', function() {
-      if (isPortraitMode()) {
-        if (v169 && !v169.paused) {
-          const t = v169.currentTime;
-          v169.pause();
-          if (v916) {
-            v916.currentTime = t;
-            v916.play().catch(function(){});
-          }
+    // Attempt autoplay immediately upon load
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', startActivePlayback);
+    } else {
+      startActivePlayback();
+    }
+    window.addEventListener('load', startActivePlayback);
+
+    // Unmute action
+    if (unmuteBtn) {
+      unmuteBtn.addEventListener('click', function(e) {
+        e.stopPropagation();
+        const active = getActiveVid();
+        if (active) {
+          active.muted = false;
+          active.play().catch(function(){});
+          unmuteBtn.classList.add('hidden');
         }
-      } else {
-        if (v916 && !v916.paused) {
-          const t = v916.currentTime;
-          v916.pause();
-          if (v169) {
-            v169.currentTime = t;
-            v169.play().catch(function(){});
+      });
+    }
+
+    // Hide unmute button if user un-mutes manually via native controls
+    [v169, v916].forEach(function(v) {
+      if (v) {
+        v.addEventListener('volumechange', function() {
+          if (!v.muted && v.volume > 0 && unmuteBtn) {
+            unmuteBtn.classList.add('hidden');
           }
+        });
+      }
+    });
+
+    // Also unmute/play on first user interaction anywhere on the frame
+    document.querySelector('.video-frame').addEventListener('click', function() {
+      const active = getActiveVid();
+      if (active && active.muted) {
+        active.muted = false;
+        if (unmuteBtn) unmuteBtn.classList.add('hidden');
+      }
+    });
+
+    // Seamless resize handling
+    window.addEventListener('resize', function() {
+      const active = getActiveVid();
+      const inactive = getInactiveVid();
+      if (inactive && !inactive.paused) {
+        const cur = inactive.currentTime;
+        const wasMuted = inactive.muted;
+        inactive.pause();
+        if (active) {
+          active.currentTime = cur;
+          active.muted = wasMuted;
+          active.play().catch(function(){});
         }
       }
     });
