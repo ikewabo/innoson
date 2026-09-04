@@ -139,6 +139,25 @@
     object-fit: cover;
     display: block;
     outline: none;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* Fallback GIF (always looping behind/under the video element so user NEVER sees black screen) */
+  .ad-gif-fallback {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    z-index: 1;
+    pointer-events: none;
+  }
+  .ad-gif-169 {
+    display: block;
+  }
+  .ad-gif-916 {
+    display: none;
   }
 
   /* Unmute Floating Banner / Button */
@@ -176,6 +195,51 @@
   @keyframes bounceIn {
     0% { opacity: 0; transform: translateY(15px); }
     100% { opacity: 1; transform: translateY(0); }
+  }
+
+  /* Tap To Play Overlay if mobile OS blocks autoplay entirely */
+  .tap-play-overlay {
+    position: absolute;
+    inset: 0;
+    z-index: 25;
+    background: rgba(0,0,0,0.35);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    cursor: pointer;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+  }
+  .tap-play-overlay.show {
+    opacity: 1;
+    pointer-events: auto;
+  }
+  .tap-play-btn {
+    width: 68px;
+    height: 68px;
+    border-radius: 50%;
+    background: var(--sc-accent);
+    color: var(--sc-accent-ink);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 0 30px var(--sc-accent-glow);
+    animation: pulsePlay 1.8s infinite;
+  }
+  @keyframes pulsePlay {
+    0%, 100% { transform: scale(1); box-shadow: 0 0 20px var(--sc-accent-glow); }
+    50% { transform: scale(1.1); box-shadow: 0 0 40px rgba(0, 210, 255, 0.7); }
+  }
+  .tap-play-text {
+    font-family: var(--sc-font-mono);
+    font-size: 0.85rem;
+    letter-spacing: 0.16em;
+    color: #ffffff;
+    text-transform: uppercase;
+    text-shadow: 0 2px 10px rgba(0,0,0,0.8);
   }
 
   /* Video Elements Switcher */
@@ -267,6 +331,12 @@
     .ad-video-916 {
       display: block !important;
     }
+    .ad-gif-169 {
+      display: none !important;
+    }
+    .ad-gif-916 {
+      display: block !important;
+    }
     .unmute-banner {
       bottom: 16px;
       right: 16px;
@@ -308,18 +378,26 @@
 
   <!-- Stage: Aspect-Ratio Responsive Video -->
   <main class="theater-stage">
-    <div class="video-frame">
+    <div class="video-frame" id="videoFrame">
+      <!-- High-fidelity GIF Fallback Layer (Guarantees instant visual playback on mobile instantly) -->
+      <img class="ad-gif-fallback ad-gif-169" id="gifFallback169" src="assets/ad-vid-1.gif" alt="Innoson Billboard Commercial">
+      <img class="ad-gif-fallback ad-gif-916" id="gifFallback916" src="assets/ad-vid-916-1.gif" alt="Innoson Billboard Commercial Portrait">
+
       <!-- 16:9 Landscape Video for Desktop -->
-      <video class="ad-video-player ad-video-169" id="video169" controls autoplay muted playsinline preload="auto" loop>
-        <source src="assets/ad-vid-1.mp4" type="video/mp4">
-        Your browser does not support HTML5 video.
-      </video>
+      <video class="ad-video-player ad-video-169" id="video169" poster="assets/ad-vid-1-poster.jpg" src="assets/ad-vid-1.mp4" controls autoplay muted playsinline loop preload="auto"></video>
 
       <!-- 9:16 Vertical Video for Mobile Devices -->
-      <video class="ad-video-player ad-video-916" id="video916" controls autoplay muted playsinline preload="auto" loop>
-        <source src="assets/ad-vid-916-1.mp4" type="video/mp4">
-        Your browser does not support HTML5 video.
-      </video>
+      <video class="ad-video-player ad-video-916" id="video916" poster="assets/ad-vid-916-poster.jpg" src="assets/ad-vid-916-1.mp4" controls autoplay muted playsinline loop preload="auto"></video>
+
+      <!-- Tap To Play Overlay (revealed only if native autoplay is blocked) -->
+      <div class="tap-play-overlay" id="tapOverlay">
+        <div class="tap-play-btn">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+            <path d="M8 5v14l11-7z"/>
+          </svg>
+        </div>
+        <div class="tap-play-text">Tap to Play Video</div>
+      </div>
 
       <!-- Unmute Quick Action Pill -->
       <button class="unmute-banner" id="unmuteBtn" aria-label="Unmute Video Audio">
@@ -352,6 +430,8 @@
     const v169 = document.getElementById('video169');
     const v916 = document.getElementById('video916');
     const unmuteBtn = document.getElementById('unmuteBtn');
+    const tapOverlay = document.getElementById('tapOverlay');
+    const videoFrame = document.getElementById('videoFrame');
 
     function isPortraitMode() {
       return window.innerWidth <= 768 || (window.innerWidth / window.innerHeight) <= 0.85;
@@ -365,38 +445,76 @@
       return isPortraitMode() ? v169 : v916;
     }
 
-    function startActivePlayback() {
+    function triggerPlay() {
       const active = getActiveVid();
       const inactive = getInactiveVid();
 
-      if (inactive) {
+      if (inactive && !inactive.paused) {
         inactive.pause();
       }
 
       if (active) {
-        // First try to play with current sound state
-        const promise = active.play();
-        if (promise !== undefined) {
-          promise.catch(function() {
-            // If browser autoplay policy blocks audio, mute and play immediately (100% reliable)
-            active.muted = true;
-            active.play().catch(function(e) {
-              console.log('Playback retry error:', e);
-            });
+        active.muted = true;
+        active.playsInline = true;
+        const p = active.play();
+        if (p !== undefined) {
+          p.then(function() {
+            if (tapOverlay) tapOverlay.classList.remove('show');
+          }).catch(function(err) {
+            console.log('Autoplay was prevented by browser:', err);
+            if (tapOverlay) tapOverlay.classList.add('show');
           });
         }
       }
     }
 
-    // Attempt autoplay immediately upon load
-    if (document.readyState === 'loading') {
-      document.addEventListener('DOMContentLoaded', startActivePlayback);
-    } else {
-      startActivePlayback();
-    }
-    window.addEventListener('load', startActivePlayback);
+    // Force play immediately on all loading stages
+    triggerPlay();
+    document.addEventListener('DOMContentLoaded', triggerPlay);
+    window.addEventListener('load', triggerPlay);
 
-    // Unmute action
+    // Watch for video start to hide overlay
+    [v169, v916].forEach(function(v) {
+      if (v) {
+        v.addEventListener('playing', function() {
+          if (tapOverlay) tapOverlay.classList.remove('show');
+        });
+        v.addEventListener('timeupdate', function() {
+          if (v.currentTime > 0.1 && tapOverlay) {
+            tapOverlay.classList.remove('show');
+          }
+        });
+      }
+    });
+
+    // Touch/click listener anywhere on frame to start video and/or unmute
+    function userInteractPlay() {
+      const active = getActiveVid();
+      if (active) {
+        if (active.paused) {
+          active.play().catch(function(){});
+        }
+        if (active.muted) {
+          active.muted = false;
+          if (unmuteBtn) unmuteBtn.classList.add('hidden');
+        }
+        if (tapOverlay) tapOverlay.classList.remove('show');
+      }
+    }
+
+    if (videoFrame) {
+      videoFrame.addEventListener('click', userInteractPlay);
+      videoFrame.addEventListener('touchstart', userInteractPlay, { passive: true });
+    }
+
+    if (tapOverlay) {
+      tapOverlay.addEventListener('click', function(e) {
+        e.stopPropagation();
+        userInteractPlay();
+      });
+    }
+
+    // Unmute Button Click
     if (unmuteBtn) {
       unmuteBtn.addEventListener('click', function(e) {
         e.stopPropagation();
@@ -417,15 +535,6 @@
             unmuteBtn.classList.add('hidden');
           }
         });
-      }
-    });
-
-    // Also unmute/play on first user interaction anywhere on the frame
-    document.querySelector('.video-frame').addEventListener('click', function() {
-      const active = getActiveVid();
-      if (active && active.muted) {
-        active.muted = false;
-        if (unmuteBtn) unmuteBtn.classList.add('hidden');
       }
     });
 
