@@ -130,6 +130,8 @@
   .sc-master-experience {
     position: relative;
     width: 100vw;
+    min-height: 680vh;
+    height: 680vh;
     background: #050608;
   }
   .sc-master-stage {
@@ -1088,12 +1090,12 @@
       </picture>
 
       <!-- Landscape / Desktop 16:9 Video (Plays once on load, then syncs with scroll) -->
-      <video class="master-video-169" id="video169" src="assets/innoson-master-scrub.mp4" poster="assets/innoson-master-poster.webp" muted playsinline preload="auto"></video>
+      <video class="master-video-169" id="video169" src="assets/innoson-master-scrub.mp4" poster="assets/innoson-master-poster.webp" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
       <img class="master-gif-landscape" id="gif169_1" src="assets/hero-vid-1a.gif" alt="Innoson Landscape Genesis">
       <img class="master-gif-landscape" id="gif169_2" src="assets/hero-vid-2a.gif" alt="Innoson Landscape SUV Motion">
 
       <!-- Portrait / Mobile 9:16 Video (Plays once on load, then syncs with scroll) -->
-      <video class="master-video-916" id="video916" src="assets/innoson-master-scrub-916.mp4" poster="assets/innoson-master-poster-916.webp" muted playsinline preload="auto"></video>
+      <video class="master-video-916" id="video916" src="assets/innoson-master-scrub-916.mp4" poster="assets/innoson-master-poster-916.webp" autoplay muted loop playsinline webkit-playsinline preload="auto"></video>
       <img class="master-gif-portrait" id="gif916_1" src="assets/hero-vid-916-1a.gif" alt="Innoson Portrait Genesis">
       <img class="master-gif-portrait" id="gif916_2" src="assets/hero-vid-916-2a.gif" alt="Innoson Portrait SUV Motion">
       <div class="master-scrim"></div>
@@ -1359,33 +1361,107 @@
 
     let hasAutoplayFinished = false;
     let isUserScrolled = false;
+    let targetP = 0;
+    let isTicking = false;
+    let isSeeking = false;
+    let pendingSeekTime = null;
 
-    // One-time Play Onload for Both Portrait and Landscape
-    function playOnload() {
-      const vid = getActiveVideo();
+    // Robust Cross-Browser Autoplay Onload & User Activation Unlock
+    function attemptPlay(vid) {
       if (!vid) return;
-
       vid.muted = true;
       vid.playsInline = true;
-      vid.currentTime = 0;
+      vid.setAttribute('muted', '');
+      vid.setAttribute('playsinline', '');
 
       const playPromise = vid.play();
       if (playPromise !== undefined) {
         playPromise.then(function() {
-          console.log('Autoplay started successfully');
+          // Autoplay started smoothly
         }).catch(function(err) {
-          console.log('Autoplay deferred, will play on user scroll or touch', err);
+          // Deferred by browser autoplay policy until user gesture
         });
       }
-
-      // Once it plays through once, mark complete and pause so scroll takes over
-      vid.addEventListener('ended', function() {
-        hasAutoplayFinished = true;
-        vid.pause();
-      }, { once: true });
     }
 
-    // Scroll sync
+    function playOnload() {
+      const vid = getActiveVideo();
+      if (vid) {
+        attemptPlay(vid);
+      }
+      // Also prime both in background so orientation changes work seamlessly
+      if (video169 && video169 !== vid) {
+        attemptPlay(video169);
+      }
+      if (video916 && video916 !== vid) {
+        attemptPlay(video916);
+      }
+    }
+
+    // Gesture unlock for strict browsers (Firefox, iOS Safari, Edge battery-saver)
+    function unlockMedia() {
+      const activeVid = getActiveVideo();
+      if (activeVid && activeVid.paused && !isUserScrolled) {
+        attemptPlay(activeVid);
+      }
+    }
+    ['touchstart', 'touchend', 'pointerdown', 'click', 'wheel', 'keydown'].forEach(function(evt) {
+      window.addEventListener(evt, unlockMedia, { passive: true, once: true });
+    });
+
+    // Handle seeked events to ensure decoder never hangs in Firefox / Edge
+    [video169, video916].forEach(function(v) {
+      if (!v) return;
+      v.addEventListener('seeked', function() {
+        isSeeking = false;
+        clearTimeout(seekTimer);
+        if (pendingSeekTime !== null) {
+          const next = pendingSeekTime;
+          pendingSeekTime = null;
+          safeSeek(v, next);
+        }
+      });
+      v.addEventListener('seeking', function() {
+        isSeeking = true;
+      });
+      v.addEventListener('canplay', function() {
+        if (!isUserScrolled && v.paused) {
+          attemptPlay(v);
+        }
+      }, { once: true });
+    });
+
+    let seekTimer = null;
+
+    function safeSeek(vid, targetTime) {
+      if (!vid || !vid.duration || isNaN(vid.duration)) return;
+      targetTime = Math.max(0, Math.min(targetTime, vid.duration - 0.05));
+      if (Math.abs(vid.currentTime - targetTime) < 0.03) return;
+
+      if (isSeeking || vid.seeking) {
+        pendingSeekTime = targetTime;
+        return;
+      }
+
+      try {
+        isSeeking = true;
+        clearTimeout(seekTimer);
+        seekTimer = setTimeout(function() {
+          isSeeking = false;
+          if (pendingSeekTime !== null) {
+            const next = pendingSeekTime;
+            pendingSeekTime = null;
+            safeSeek(vid, next);
+          }
+        }, 350);
+        vid.currentTime = targetTime;
+      } catch (e) {
+        isSeeking = false;
+        clearTimeout(seekTimer);
+      }
+    }
+
+    // Scroll sync helper methods
     window.scrollToJourney = function() {
       const rect = expSection.getBoundingClientRect();
       const top = window.scrollY + rect.top;
@@ -1406,29 +1482,46 @@
       });
     };
 
-    function updateMasterExperience() {
+    function onScrollOrResize() {
       const rect = expSection.getBoundingClientRect();
       const h = expSection.offsetHeight - window.innerHeight;
-      let p = 0;
       if (h > 0) {
-        p = Math.min(Math.max(-rect.top / h, 0), 1);
+        targetP = Math.min(Math.max(-rect.top / h, 0), 1);
+      } else {
+        targetP = 0;
       }
 
       if (window.scrollY > 15) {
         isUserScrolled = true;
       }
 
+      if (!isTicking) {
+        isTicking = true;
+        requestAnimationFrame(renderLoop);
+      }
+    }
+
+    function renderLoop() {
+      isTicking = false;
+      updateMasterExperience(targetP);
+    }
+
+    function updateMasterExperience(p) {
+      if (typeof p !== 'number') {
+        const rect = expSection.getBoundingClientRect();
+        const h = expSection.offsetHeight - window.innerHeight;
+        p = h > 0 ? Math.min(Math.max(-rect.top / h, 0), 1) : 0;
+      }
+
       const activeVid = getActiveVideo();
 
-      // If user has scrolled or autoplay finished, scrub the video currentTime to match scroll progress
+      // If user has scrolled, scrub video safely across all browser engines
       if (isUserScrolled && activeVid && activeVid.duration) {
         if (!activeVid.paused) {
-          activeVid.pause();
+          try { activeVid.pause(); } catch(e){}
         }
         const targetTime = p * activeVid.duration;
-        if (Math.abs(activeVid.currentTime - targetTime) > 0.04) {
-          try { activeVid.currentTime = targetTime; } catch(e){}
-        }
+        safeSeek(activeVid, targetTime);
       }
 
       // 1. HERO LAYER FADE (0.00 -> 0.08)
@@ -1503,18 +1596,14 @@
       }
     }
 
-    window.addEventListener('resize', function() {
-      updateMasterExperience();
-    }, { passive: true });
-
-    window.addEventListener('scroll', updateMasterExperience, { passive: true });
+    window.addEventListener('resize', onScrollOrResize, { passive: true });
+    window.addEventListener('scroll', onScrollOrResize, { passive: true });
 
     // Initialize
-    updateMasterExperience();
+    onScrollOrResize();
     window.addEventListener('load', playOnload);
-    // Also trigger if already loaded
     if (document.readyState === 'complete' || document.readyState === 'interactive') {
-      setTimeout(playOnload, 150);
+      setTimeout(playOnload, 100);
     }
   })();
 </script>
