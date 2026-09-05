@@ -556,7 +556,28 @@
   })();
 </script>
 
-<elevenlabs-convai agent-id="agent_3401m1peenx3efttqdc3dzn20mbk"></elevenlabs-convai>
-<script src="https://unpkg.com/@elevenlabs/convai-widget-embed" async type="text/javascript"></script>
+<script>
+  // Surface ElevenLabs Voice Agent when and ONLY when the user has been on the site over 90s
+  (function() {
+    const DELAY_MS = 90000; // 90 seconds
+    const AGENT_ID = 'agent_3401m1peenx3efttqdc3dzn20mbk';
+    
+    function revealElevenLabsWidget() {
+      if (document.querySelector('elevenlabs-convai')) return;
+      
+      const convaiEl = document.createElement('elevenlabs-convai');
+      convaiEl.setAttribute('agent-id', AGENT_ID);
+      document.body.appendChild(convaiEl);
+
+      const scriptEl = document.createElement('script');
+      scriptEl.src = 'https://unpkg.com/@elevenlabs/convai-widget-embed';
+      scriptEl.async = true;
+      scriptEl.type = 'text/javascript';
+      document.body.appendChild(scriptEl);
+    }
+
+    setTimeout(revealElevenLabsWidget, DELAY_MS);
+  })();
+</script>
 </body>
 </html>
