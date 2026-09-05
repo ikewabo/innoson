@@ -649,8 +649,9 @@
   .close-scrim {
     position: absolute;
     inset: 0;
-    background: radial-gradient(circle at 50% 50%, rgba(4,5,7,0.45) 0%, rgba(4,5,7,0.85) 75%, rgba(4,5,7,0.98) 100%),
-                linear-gradient(to top, rgba(4,5,7,0.95) 0%, rgba(4,5,7,0.3) 50%, rgba(4,5,7,0.95) 100%);
+    /* Reduced overlay opacity by ~65% so the underlying vehicle clip is crisp and vibrant */
+    background: radial-gradient(circle at 50% 50%, rgba(4,5,7,0.15) 0%, rgba(4,5,7,0.30) 75%, rgba(4,5,7,0.45) 100%),
+                linear-gradient(to top, rgba(4,5,7,0.50) 0%, rgba(4,5,7,0.10) 50%, rgba(4,5,7,0.50) 100%);
     z-index: 2;
     pointer-events: none;
   }
@@ -936,7 +937,7 @@
       right: 1.2rem;
       left: 1.2rem;
       justify-content: space-between;
-      padding: 0.6rem 0.9rem;
+      padding: 0.5rem 0.85rem;
       font-size: 0.65rem;
     }
 
@@ -950,48 +951,63 @@
       line-height: 1.18;
       margin-bottom: 0.8rem;
     }
+    /* Hide long small narrative text on mobile to avoid clutter */
     .editorial-sub-caption {
-      font-size: 0.95rem;
-      line-height: 1.5;
+      display: none !important;
     }
 
+    /* Section 03 Mobile Simplification - eliminate small text clutter blinding the vehicle */
     .specs-continuous-overlay {
-      padding: 7.2rem 1.4rem 2rem 1.4rem;
-      overflow-y: auto;
+      padding: 5.5rem 1.2rem 2rem 1.2rem;
+      overflow-y: visible;
+      justify-content: center;
     }
     .spec-header-grid {
       grid-template-columns: 1fr;
-      gap: 0.8rem;
+      gap: 0.3rem;
       margin-bottom: 1.2rem;
+      text-align: center;
+    }
+    .spec-eyebrow {
+      font-size: 0.72rem;
+      margin-bottom: 0.3rem;
     }
     .spec-heading {
-      font-size: 1.8rem;
+      font-size: clamp(1.5rem, 6vw, 2.1rem);
+      line-height: 1.15;
     }
+    /* Hide the cluttered paragraphs that blind the site */
     .spec-lead-text {
-      font-size: 0.9rem;
-      line-height: 1.5;
+      display: none !important;
     }
     .spec-cards-grid {
-      grid-template-columns: 1fr;
-      gap: 0.75rem;
-      max-height: 48vh;
-      overflow-y: auto;
-      padding-right: 4px;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 0.65rem;
+      max-height: none;
+      overflow-y: visible;
+      padding-right: 0;
     }
     .spec-card {
-      padding: 1.1rem;
+      padding: 0.9rem 0.8rem;
+      background: rgba(10, 14, 20, 0.45);
+      border-radius: 6px;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
     }
     .spec-card-num {
-      margin-bottom: 0.4rem;
-      font-size: 0.7rem;
+      margin-bottom: 0.3rem;
+      font-size: 0.65rem;
+      letter-spacing: 0.1em;
     }
     .spec-card-title {
-      font-size: 1rem;
-      margin-bottom: 0.35rem;
+      font-size: 0.88rem;
+      font-weight: 700;
+      line-height: 1.25;
+      margin-bottom: 0;
     }
+    /* Hide all small description text inside cards on mobile */
     .spec-card-desc {
-      font-size: 0.8rem;
-      line-height: 1.45;
+      display: none !important;
     }
 
     .close-section {
@@ -1004,13 +1020,20 @@
     .close-gif-portrait {
       display: block !important;
     }
+    /* Reduce 65% of blur and dark scrim on mobile for crystal clear video visibility */
+    .close-scrim {
+      background: radial-gradient(circle at 50% 50%, rgba(4,5,7,0.10) 0%, rgba(4,5,7,0.22) 75%, rgba(4,5,7,0.38) 100%),
+                  linear-gradient(to top, rgba(4,5,7,0.40) 0%, rgba(4,5,7,0.08) 50%, rgba(4,5,7,0.40) 100%) !important;
+    }
     .close-title {
       font-size: 2.1rem;
       line-height: 1.15;
+      text-shadow: 0 3px 18px rgba(0,0,0,0.9);
     }
     .close-desc {
-      font-size: 1rem;
+      font-size: 0.95rem;
       margin-bottom: 2rem;
+      text-shadow: 0 2px 10px rgba(0,0,0,0.9);
     }
     .close-cta-group {
       flex-direction: column;
